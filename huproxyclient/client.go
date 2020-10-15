@@ -34,6 +34,8 @@ import (
 var (
 	writeTimeout = flag.Duration("write_timeout", 10*time.Second, "Write timeout")
 	basicAuth    = flag.String("auth", "", "HTTP Basic Auth in @<filename> or <username>:<password> format.")
+	tokenAuth    = flag.String("token", "", "Authorization token for JWT auth")
+	userCookie   = flag.String("cookie", "", "Broker user cookie for per-user routing")
 	verbose      = flag.Bool("verbose", false, "Verbose.")
 )
 
@@ -97,6 +99,21 @@ func main() {
 		a := base64.StdEncoding.EncodeToString([]byte(ss))
 		head["Authorization"] = []string{
 			"Basic " + a,
+		}
+	}
+
+	// Add token auth
+	if *tokenAuth != "" {
+		log.Printf("INFO: Adding bearer token")
+		head["Authorization"] = []string{
+			fmt.Sprintf("Bearer %s", *tokenAuth),
+		}
+	}
+
+	if *userCookie != "" {
+		log.Printf("INFO: Adding user cookie")
+		head["Cookie"] = []string{
+			*userCookie,
 		}
 	}
 
