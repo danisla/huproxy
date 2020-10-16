@@ -24,6 +24,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jws"
@@ -93,6 +94,21 @@ func main() {
 			log.Fatalf("Could not parse credential File %v", err)
 		}
 		refreshToken = tok.RefreshToken
+
+		var parser *jwt.Parser
+		parser = new(jwt.Parser)
+		tt, _, err := parser.ParseUnverified(tok.IDToken, &jwt.StandardClaims{})
+		if err != nil {
+			log.Fatalf("Could not parse saved id_tokne File %v", err)
+		}
+
+		c, ok := tt.Claims.(*jwt.StandardClaims)
+		err = tt.Claims.Valid()
+		if ok && c.Audience == *flAudience && err == nil {
+			fmt.Printf("%s\n", tt.Raw)
+			return
+		}
+
 	}
 	data := url.Values{
 		"client_id":     {conf.ClientID},
@@ -150,5 +166,5 @@ func main() {
 	defer f.Close()
 	json.NewEncoder(f).Encode(tokenRes)
 
-	log.Printf("ID Token:  %s", tokenRes.IDToken)
+	fmt.Printf("%s\n", tokenRes.IDToken)
 }
